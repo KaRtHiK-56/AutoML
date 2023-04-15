@@ -92,8 +92,6 @@ if menu == "ML Model":
             best_model = compare_models(fold=5)
             compare_df = pull()
             sl.dataframe(compare_df)
-            cm = plot_model(best_model, plot = 'error')
-            sl.pyplot(cm)
             save_model(best_model,'best_model')
 
     if types == "Classification":
@@ -104,8 +102,6 @@ if menu == "ML Model":
             best_model1 = compare_models(fold=5)
             compare_df1 = pull()
             sl.dataframe(compare_df1)
-            cm = plot_model(best_model1, plot = 'Confusion Matrix')
-            sl.pyplot(cm)
             save_model(best_model,'best_model')
 
 
