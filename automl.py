@@ -1,26 +1,38 @@
+#streamlit 
 import streamlit as sl 
+# data manipulation library pandas 
 import pandas as pd
-from sklearn.impute import SimpleImputer
-from mlbox.preprocessing import *
-from mlbox.optimisation import *
-from mlbox.prediction import *
-from mlbox import mlb
+# AutoMl Libraries
+#1. Pycaret
+#2. FLAML
+from pycaret.classification import *
+from pycaret.regression import *
+from pycaret.regression import setup, compare_models, pull, save_model, load_model
+from pycaret.classification import setup, compare_models, pull, save_model, load_model
+
+#Auto EDA Libraries
+#1. Pandas profiling
+#2. SweetViz
+#3. AutoViz
+#4. Dtale
 import ydata_profiling
 from streamlit_pandas_profiling import st_profile_report
+import sweetviz as sv
+from autoviz.AutoViz_Class import AutoViz_Class
+import dtale
 import os
-
 
 with sl.sidebar:
     sl.image("AUTOMLLOGO.PNG")
     sl.title("Welcome to the AutoML Webapp!!")
-    menu=sl.radio("Menu" ,["Home","Upload","EDA","ML Model","About Me"])
+    menu=sl.radio("Menu" ,["Home" , "Upload" , "EDA" , "ML Model",  "Download" , "About Me"])
 
 if menu=="Home":
 
     sl.title("**Auto Machine Learning Web Application**" )
     sl.header("AutoML Web App")
     sl.text("This is an Auto Machine learning web application which helps in making\nExploratary data analysis\
-and auto ML models in flexible and in easy manner\nto save your time.")
+ and auto ML models in flexible and in easy manner\nto save your time.")
     sl.markdown("---")
     sl.subheader("Steps to Follow")
     listitems="""1. Click on the Upload option and upload the Dataset that you have.\n
@@ -46,35 +58,65 @@ if menu == "Upload":
 if menu == "EDA":
     sl.title("Welcome to the Data Analysis Section!")
     sl.header("This section will give your profile report.")
-    report = df.profile_report()
-    st_profile_report(report)
+    edaselect = sl.selectbox("Select any of the Data analysis model for your Data from the given list."
+        ,options=["Pandas-Profiling" , "SweetViz" , "DTale"])
+
+    if edaselect == "Pandas-Profiling":
+        if sl.button('Run EDA'):    
+            pandas = df.profile_report()
+            st_profile_report(pandas)
+
+    if edaselect == "SweetViz":
+        if sl.button('Run EDA'):
+            sweetviz = sv.analyze(df)
+            sweetviz.show_html('sweet_report.html')
+            
+    if edaselect == "DTale":
+        if sl.button('Run EDA'):
+            d = dtale.show(df)
+            d.open_browser()
 
 if menu == "ML Model":
     sl.title("Welcome to the Machine Learning Modelling Section!")
     sl.header("This section will predict on your data.")
     target = sl.selectbox('Choose the target variable that you want to predict from your data', df.columns)
-    if sl.button('Auto ML'):
-        model = mlb.preprocessing.Drift_thresholder().fit_transform(df)
-        evaluate = mlb.optimisation.Optimiser().evaluate(None, model)
-        space = {
+    types = sl.selectbox("Select weather you want to perform Regression or Classification."
+        ,options=["Regression" , "Classification"])
 
-        'ne__numerical_strategy' : {"space" : [0, 'mean']},
 
-        'ce__strategy' : {"space" : ["label_encoding", "random_projection", "entity_embedding"]},
+    if types == "Regression":
+        if sl.button("Run Model"):
+            setup(df, target = target)
+            setup_df = pull()
+            sl.dataframe(setup_df)
+            best_model = compare_models(fold=5)
+            compare_df = pull()
+            sl.dataframe(compare_df)
+            cm = plot_model(best_model, plot = 'error')
+            sl.pyplot(cm)
+            save_model(best_model,'best_model')
 
-        'fs__strategy' : {"space" : ["variance", "rf_feature_importance"]},
-        'fs__threshold': {"search" : "choice", "space" : [0.1, 0.2, 0.3]},
+    if types == "Classification":
+        if sl.button("Run Model"):
+            setup(df, target = target)
+            setup_df1 = pull()
+            sl.dataframe(setup_df1)
+            best_model1 = compare_models(fold=5)
+            compare_df1 = pull()
+            sl.dataframe(compare_df1)
+            cm = plot_model(best_model1, plot = 'Confusion Matrix')
+            sl.pyplot(cm)
+            save_model(best_model,'best_model')
 
-        'est__strategy' : {"space" : ["LightGBM"]},
-        'est__max_depth' : {"search" : "choice", "space" : [5,6]},
-        'est__subsample' : {"search" : "uniform", "space" : [0.6,0.9]}
 
-        }
+if menu == "Download":
+    with open('best_model.pkl', 'rb') as f: 
+        sl.download_button('Download Model', f , file_name="automl_model.pkl")
+        sl.code("""After Downloading the model, please follow these instructions in your Coding Environment.\n
+        from pycaret.classfication import load_model or\n
+        from pycaret.regression import load_model
+        model = load_model("automl_model")\nto see the model pipepline.""")  
 
-        best = mlb.optimise(space, evaluate, max_evals = 5)
-        comparision = mlb.prediction.Predictor().fit_predict(best, eval)
-        sl.dataframe(comparision)
-        
 
 if menu == "About Me":
     sl.title("@ ABOUT ME!!")
