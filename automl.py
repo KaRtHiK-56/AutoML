@@ -22,6 +22,23 @@ from autoviz.AutoViz_Class import AutoViz_Class
 import dtale
 import os
 
+sl.markdown("""
+<style>
+
+.css-1w3peyr.egzxvld1
+{
+    visibility : hidden;
+}
+
+.e1fb0mya1.css-fblp2m.ex0cdmw0
+{
+    visibility : hidden;
+}
+
+</style>
+""" , unsafe_allow_html = True)
+
+
 with sl.sidebar:
     sl.image("AUTOMLLOGO.PNG")
     sl.title("Welcome to the AutoML Webapp!!")
